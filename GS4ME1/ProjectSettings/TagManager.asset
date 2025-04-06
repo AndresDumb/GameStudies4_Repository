@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - XR Cam
+  - Cell
   layers:
   - Default
   - TransparentFX

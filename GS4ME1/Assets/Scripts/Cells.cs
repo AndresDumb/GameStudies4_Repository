@@ -39,7 +39,7 @@ public class Cells : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        NumberGO.transform.LookAt(XRCam.transform);
+        NumberGO.transform.LookAt(new  Vector3(XRCam.transform.position.x, XRCam.transform.position.y, XRCam.transform.position.z));
         if (type != Type.Number)
         {
             NumberGO.SetActive(false);
