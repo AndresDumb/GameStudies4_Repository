@@ -5,16 +5,20 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
 using Random = UnityEngine.Random;
+using EnhancedTouch = UnityEngine.InputSystem.EnhancedTouch;
 
 public class Platform : MonoBehaviour
 {
     public ARRaycastManager raycastManager;
-    
+    public ARPlaneManager planeManager;
+    public GameObject EmptyParent;
+    private GameObject emptyParent;
     public GameObject Cell;
     public GameObject Cell2;
     public int xSize, ySize;
-    public float Scale;
+    public float Scale, moveSpeed;
     public int randomNum;
     public GameObject[,] arrCells;
     public bool[,] arrMines;
@@ -22,29 +26,75 @@ public class Platform : MonoBehaviour
     public Slider slider;
     public Vector3 Coordinates;
     public List<ARRaycastHit> hits = new List<ARRaycastHit>();
+    public FixedJoystick fixedJoystick;
+    public GameObject XRCam;
+    public GameObject Player, NewGame;
+    public bool placed  = false;
+    public bool NewGameActive = false;
+    
     
     
     // Start is called before the first frame update
     void Start()
     {
+        Scale = 0.3f;
+        emptyParent = Instantiate(EmptyParent, new Vector3(XRCam.transform.position.x,XRCam.transform.position.y -10f, XRCam.transform.position.z), Quaternion.identity);
         
+
+    }
+
+    private void OnEnable()
+    {
+        EnhancedTouch.TouchSimulation.Enable();
+        EnhancedTouch.EnhancedTouchSupport.Enable();
+        EnhancedTouch.Touch.onFingerDown += FingerDown;
+    }
+
+    private void OnDisable()
+    {
+        EnhancedTouch.TouchSimulation.Disable();
+        EnhancedTouch.EnhancedTouchSupport.Disable();
+        EnhancedTouch.Touch.onFingerDown -= FingerDown;
+    }
+
+    private void FingerDown(EnhancedTouch.Finger finger)
+    {
+        if (finger.index != 0) return;
+
+        if (placed) return;
         
+
+        if (raycastManager.Raycast(finger.currentTouch.screenPosition, hits, TrackableType.Planes))
+        {
+            foreach (var hitPose in hits)
+            {
+                
+                EmptyParent.transform.position = new Vector3(hitPose.pose.position.x, hitPose.pose.position.y - 10f, hitPose.pose.position.z);
+                            placed = true;
+            }
+            
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (placed  && NewGameActive == false)
+        {
+            NewGame.SetActive(true);
+            NewGameActive = true;
+        }
             
         
-       
-        Scale = slider.value;
+        
+        Movement();
+        
         for (int i = 0; i < ySize; i++)
         {
             for (int j = 0; j < xSize; j++)
             {
                 arrCells[j,i].transform.localScale = new Vector3(Scale, Scale, Scale);
-                arrCells[j, i].transform.localPosition = new Vector3((hits[0].pose.position.x + (j*1.5f)) *Scale, 0,(hits[0].pose.position.z + (i*1.5f))*Scale);
+                arrCells[j, i].transform.localPosition = new Vector3((emptyParent.transform.position.x + (j*1.5f)) *Scale, arrCells[j,i].transform.position.y,(emptyParent.transform.position.z + (i*1.5f))*Scale);
             }
         }
     }
@@ -250,11 +300,9 @@ public class Platform : MonoBehaviour
 
     public void CreateMines()
     {
-        hits = new List<ARRaycastHit>();
-        raycastManager.Raycast(new Vector2(Screen.width/2,Screen.height/2), hits,
-            UnityEngine.XR.ARSubsystems.TrackableType.Planes);
-        if (hits.Count > 0)
-        {
+        
+        
+            
             randomNum = Random.Range(10, 15);
             xSize = randomNum;
             ySize = randomNum;
@@ -265,7 +313,7 @@ public class Platform : MonoBehaviour
             {
                 for (int j = 0; j < xSize; j++)
                 {
-                    arrCells[j, i] = Instantiate(Cell, new Vector3((hits[0].pose.position.x + (j*1.5f)) * Scale, 0,(hits[0].pose.position.z + (i*1.5f)) * Scale), Quaternion.identity);
+                    arrCells[j, i] = Instantiate(Cell, new Vector3((emptyParent.transform.position.x + (j*1.5f)) * Scale, (emptyParent.transform.position.y),(emptyParent.transform.position.z + (i*1.5f)) * Scale), Quaternion.identity);
                     arrCells[j, i].transform.localScale = new Vector3(Scale, Scale, Scale);
                     randomNum = Random.Range(0, 100);
                     if (randomNum <=30)
@@ -311,7 +359,7 @@ public class Platform : MonoBehaviour
                     arrCells[j, i].GetComponent<Cells>().type = Cells.Type.Empty;
                 }
             }
-        }
+         
         
     }
 
@@ -325,6 +373,25 @@ public class Platform : MonoBehaviour
             }
         }
         
+    }
+
+    void Movement()
+    {
+        
+        float xInput = fixedJoystick.Horizontal;
+        float yInput = fixedJoystick.Vertical;
+        Vector3 ARForward = XRCam.transform.forward * yInput;
+        Vector3 ARRight = XRCam.transform.right * xInput;
+        ARForward *= moveSpeed;
+        ARRight *= moveSpeed;
+        emptyParent.transform.position += ARForward;
+        emptyParent.transform.position += ARRight;
+        
+    }
+
+    public void ChangeSize(Slider slider)
+    {
+        Scale = slider.value;
     }
     
 

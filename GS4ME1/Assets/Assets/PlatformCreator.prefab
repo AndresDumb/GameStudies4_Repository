@@ -44,9 +44,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6cd063be9176ff348a46ade7b8918608, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  raycastManager: {fileID: 0}
+  planeManager: {fileID: 0}
+  EmptyParent: {fileID: 504656958972651284, guid: bbdbf4eb411f6684dbd71ef3afde59f7,
+    type: 3}
   Cell: {fileID: 752333845806130743, guid: 15536c8dcd0945144b4c5e01b4a641e6, type: 3}
   Cell2: {fileID: 0}
   xSize: 0
   ySize: 0
   Scale: 0.3
+  moveSpeed: 0.03
   randomNum: 0
+  slider: {fileID: 0}
+  Coordinates: {x: 0, y: 0, z: 0}
+  fixedJoystick: {fileID: 0}
+  XRCam: {fileID: 0}
+  Player: {fileID: 0}
+  NewGame: {fileID: 0}
+  placed: 0
+  NewGameActive: 0
